@@ -1,5 +1,5 @@
 # Use the official PyTorch image as the base image  
-FROM pytorch/pytorch:latest
+FROM registry.cn-hangzhou.aliyuncs.com/pytorch/pytorch:2.4.1-cpu
 # FROM pytorch/pytorch:2.4.1-cuda12.1-cudnn9-runtime
 # torch.__version__ == '2.4.1+cu121' in "gcr.io/kaggle-gpu-images/python"
   
