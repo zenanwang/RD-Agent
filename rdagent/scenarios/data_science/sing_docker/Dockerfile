@@ -22,8 +22,16 @@ WORKDIR /workspace/mle-bench
 RUN git lfs fetch --all && git lfs pull
 RUN /opt/venv/mlebench/bin/pip install -e . --no-cache-dir
 
-# ===================== 2. Kaggle 环境 =====================
-COPY kaggle_requirements.txt /tmp/
+# ===================== 2. Kaggle 环境（内嵌 requirements） =====================
+RUN cat > /tmp/kaggle_requirements.txt << 'EOF'
+pandas==2.0.3
+numpy==1.24.3
+scikit-learn==1.3.0
+matplotlib==3.7.2
+seaborn==0.12.2
+kaggle==1.5.16
+python-dotenv==1.0.0
+EOF
 RUN python -m venv /opt/venv/kaggle
 RUN /opt/venv/kaggle/bin/pip install -r /tmp/kaggle_requirements.txt --no-cache-dir
 
@@ -43,8 +51,18 @@ RUN python -m venv /opt/venv/litellm && \
     /opt/venv/litellm/bin/pip install litellm[proxy] --no-cache-dir && \
     /opt/venv/litellm/bin/pip install git+https://ghproxy.cn/https://github.com/you-n-g/litellm.git@add_mi_cred_pr --no-cache-dir
 
-# ===================== 启动脚本 =====================
-COPY entrypoint.sh /workspace/run/
+# ===================== 启动脚本（内嵌） =====================
+RUN mkdir -p /workspace/run && \
+    cat > /workspace/run/entrypoint.sh << 'EOF'
+#!/bin/bash
+set -e
+echo "============================================="
+echo "RD-Agent Docker 环境已就绪"
+echo "============================================="
+source /opt/venv/rdagent/bin/activate
+echo "✅ 已激活 rdagent 虚拟环境"
+exec /bin/bash
+EOF
 RUN chmod +x /workspace/run/entrypoint.sh
 ENTRYPOINT ["/workspace/run/entrypoint.sh"]
 
