@@ -1,4 +1,4 @@
-# ===================== 【正确的阿里云ACR镜像】 =====================
+# ===================== 阿里云 ACR Python 3.11 私有镜像 =====================
 FROM crpi-jv81tknru9iw7phe.cn-wulanchabu.personal.cr.aliyuncs.com/11131719/python:3.11
 
 # ===================== 系统依赖 =====================
@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
 RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && \
     pip config set global.trusted-host mirrors.aliyun.com
 
-# ===================== CPU 版本 PyTorch（无CUDA） =====================
+# ===================== CPU 版 PyTorch =====================
 RUN pip install torch==2.4.1+cpu torchvision==0.19.1+cpu torchaudio==2.4.1+cpu \
     --index-url https://download.pytorch.org/whl/cpu \
     --no-cache-dir
@@ -23,15 +23,7 @@ RUN git lfs fetch --all && git lfs pull
 RUN /opt/venv/mlebench/bin/pip install -e . --no-cache-dir
 
 # ===================== 2. Kaggle 环境（内嵌 requirements） =====================
-RUN cat > /tmp/kaggle_requirements.txt << 'EOF'
-pandas==2.0.3
-numpy==1.24.3
-scikit-learn==1.3.0
-matplotlib==3.7.2
-seaborn==0.12.2
-kaggle==1.5.16
-python-dotenv==1.0.0
-EOF
+RUN echo -e "pandas==2.0.3\nnumpy==1.24.3\nscikit-learn==1.3.0\nmatplotlib==3.7.2\nseaborn==0.12.2\nkaggle==1.5.16\npython-dotenv==1.0.0" > /tmp/kaggle_requirements.txt
 RUN python -m venv /opt/venv/kaggle
 RUN /opt/venv/kaggle/bin/pip install -r /tmp/kaggle_requirements.txt --no-cache-dir
 
@@ -53,17 +45,9 @@ RUN python -m venv /opt/venv/litellm && \
 
 # ===================== 启动脚本（内嵌） =====================
 RUN mkdir -p /workspace/run && \
-    cat > /workspace/run/entrypoint.sh << 'EOF'
-#!/bin/bash
-set -e
-echo "============================================="
-echo "RD-Agent Docker 环境已就绪"
-echo "============================================="
-source /opt/venv/rdagent/bin/activate
-echo "✅ 已激活 rdagent 虚拟环境"
-exec /bin/bash
-EOF
-RUN chmod +x /workspace/run/entrypoint.sh
+    echo -e '#!/bin/bash\nset -e\necho "============================================="\necho "RD-Agent Docker 环境已就绪"\necho "============================================="\nsource /opt/venv/rdagent/bin/activate\necho "✅ 已激活 rdagent 虚拟环境"\nexec /bin/bash' > /workspace/run/entrypoint.sh && \
+    chmod +x /workspace/run/entrypoint.sh
+
 ENTRYPOINT ["/workspace/run/entrypoint.sh"]
 
 WORKDIR /workspace/RD-Agent
