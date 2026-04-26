@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
 RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && \
     pip config set global.trusted-host mirrors.aliyun.com
 
-# ===================== CPU 版 PyTorch =====================
+# ===================== CPU 版 PyTorch（独立缓存层） =====================
 RUN pip install torch==2.4.1+cpu torchvision==0.19.1+cpu torchaudio==2.4.1+cpu \
     --index-url https://download.pytorch.org/whl/cpu \
     --no-cache-dir
@@ -22,8 +22,8 @@ WORKDIR /workspace/mle-bench
 RUN git lfs fetch --all && git lfs pull
 RUN /opt/venv/mlebench/bin/pip install -e . --no-cache-dir
 
-# ===================== 2. Kaggle 环境（内嵌 requirements） =====================
-RUN echo -e "pandas==2.0.3\nnumpy==1.24.3\nscikit-learn==1.3.0\nmatplotlib==3.7.2\nseaborn==0.12.2\nkaggle==1.5.16\npython-dotenv==1.0.0" > /tmp/kaggle_requirements.txt
+# ===================== 2. Kaggle 环境（内嵌 requirements，使用 printf） =====================
+RUN printf "pandas==2.0.3\nnumpy==1.24.3\nscikit-learn==1.3.0\nmatplotlib==3.7.2\nseaborn==0.12.2\nkaggle==1.5.16\npython-dotenv==1.0.0\n" > /tmp/kaggle_requirements.txt
 RUN python -m venv /opt/venv/kaggle
 RUN /opt/venv/kaggle/bin/pip install -r /tmp/kaggle_requirements.txt --no-cache-dir
 
@@ -43,9 +43,9 @@ RUN python -m venv /opt/venv/litellm && \
     /opt/venv/litellm/bin/pip install litellm[proxy] --no-cache-dir && \
     /opt/venv/litellm/bin/pip install git+https://ghproxy.cn/https://github.com/you-n-g/litellm.git@add_mi_cred_pr --no-cache-dir
 
-# ===================== 启动脚本（内嵌） =====================
+# ===================== 启动脚本（内嵌，使用 printf） =====================
 RUN mkdir -p /workspace/run && \
-    echo -e '#!/bin/bash\nset -e\necho "============================================="\necho "RD-Agent Docker 环境已就绪"\necho "============================================="\nsource /opt/venv/rdagent/bin/activate\necho "✅ 已激活 rdagent 虚拟环境"\nexec /bin/bash' > /workspace/run/entrypoint.sh && \
+    printf '#!/bin/bash\nset -e\necho "============================================="\necho "RD-Agent Docker 环境已就绪"\necho "============================================="\nsource /opt/venv/rdagent/bin/activate\necho "✅ 已激活 rdagent 虚拟环境"\nexec /bin/bash\n' > /workspace/run/entrypoint.sh && \
     chmod +x /workspace/run/entrypoint.sh
 
 ENTRYPOINT ["/workspace/run/entrypoint.sh"]
